@@ -1,5 +1,7 @@
 services:
   service:
+    depends_on:
+      - db
     build:
       context: .
     ports:
