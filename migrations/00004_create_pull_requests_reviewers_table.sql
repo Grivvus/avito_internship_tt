@@ -4,15 +4,15 @@
 CREATE TABLE pull_request_reviewers (
     pr_id BIGINT NOT NULL,
     reviewer_id BIGINT NOT NULL,
-    
-    PRIMARY KEY (pr_id, reviewer_id)
+
+    PRIMARY KEY (pr_id, reviewer_id),
     
     -- Уникальность: один пользователь не может быть назначен дважды на один PR
-    CONSTRAINT uq_pull_request_reviewer 
-        UNIQUE (pull_request_id, reviewer_id),
+    CONSTRAINT unique_pr_reviewer 
+        UNIQUE (pr_id, reviewer_id),
     
     CONSTRAINT fk_pr_reviewers_pull_request 
-        FOREIGN KEY (pull_request_id) 
+        FOREIGN KEY (pr_id) 
         REFERENCES pull_requests(id) 
         ON DELETE CASCADE,
         

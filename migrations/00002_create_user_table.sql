@@ -9,7 +9,7 @@ CREATE TABLE users (
     
     -- Внешний ключ на таблицу команд
     CONSTRAINT fk_users_team 
-        FOREIGN KEY (team_id) 
+        FOREIGN KEY (team) 
         REFERENCES teams(name) 
         ON DELETE SET NULL
 );
