@@ -2,8 +2,8 @@
 -- +goose StatementBegin
 
 CREATE TABLE pull_request_reviewers (
-    pr_id BIGINT NOT NULL,
-    reviewer_id BIGINT NOT NULL,
+    pr_id VARCHAR(255) NOT NULL,
+    reviewer_id VARCHAR(255) NOT NULL,
 
     PRIMARY KEY (pr_id, reviewer_id),
     

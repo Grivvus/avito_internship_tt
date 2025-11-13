@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 
 CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
+    id VARCHAR(255) PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     team VARCHAR(255),
