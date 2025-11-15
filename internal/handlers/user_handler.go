@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Grivvus/reviewers/internal/api"
@@ -22,6 +23,7 @@ func (h *UserHandler) PostUsersSetIsActive(c *gin.Context) {
 	var model api.PostUsersSetIsActiveJSONBody
 
 	if err := c.BindJSON(&model); err != nil {
+		log.Println(err)
 		c.JSON(
 			http.StatusBadRequest,
 			"Wrong body format was given",
@@ -31,12 +33,14 @@ func (h *UserHandler) PostUsersSetIsActive(c *gin.Context) {
 
 	responseModel, err := h.service.SetIsActive(c.Request.Context(), model)
 	if err != nil && err == service.ResourceNotFoundError {
+		log.Println(err)
 		c.JSON(
 			http.StatusNotFound,
 			newErrorResponse(api.NOTFOUND, err.Error()),
 		)
 		return
 	} else if err != nil {
+		log.Println(err)
 		c.JSON(
 			http.StatusInternalServerError,
 			"Unkown server error",
@@ -57,6 +61,7 @@ func (h *UserHandler) GetUsersGetReview(
 	response, err := h.service.UserReviews(c.Request.Context(), params)
 
 	if err != nil {
+		log.Println(err)
 		c.JSON(
 			http.StatusInternalServerError,
 			"Unkown server error",
