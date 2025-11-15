@@ -24,14 +24,13 @@ func (ur UserRepository) Create(ctx context.Context, user api.User) error {
 	const query = `insert into public."users" (id, username, is_active, team)
 	               values ($1, $2, $3, $4)`
 
-	rows, err := ur.conn.Query(
+	_, err := ur.conn.Exec(
 		ctx, query, user.UserId,
 		user.Username, user.IsActive, user.TeamName,
 	)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
 	return nil
 }
@@ -62,7 +61,7 @@ func (ur UserRepository) Update(ctx context.Context, updatedUser api.User) error
 		where id = $4
 	`
 
-	rows, err := ur.conn.Query(
+	_, err := ur.conn.Exec(
 		ctx, query,
 		updatedUser.Username, updatedUser.IsActive,
 		updatedUser.TeamName, updatedUser.UserId,
@@ -70,8 +69,6 @@ func (ur UserRepository) Update(ctx context.Context, updatedUser api.User) error
 	if err != nil {
 		return err
 	}
-
-	defer rows.Close()
 
 	return nil
 }

@@ -60,11 +60,11 @@ func (pr PullRequestRepository) Create(
 		(id, title, author_id)
 		values ($1, $2, $3)
 	`
-	rows, err := pr.conn.Query(ctx, query, model.PullRequestId, model.PullRequestName, model.AuthorId)
+	_, err := pr.conn.Exec(ctx, query, model.PullRequestId, model.PullRequestName, model.AuthorId)
 	if err != nil {
 		return fmt.Errorf("On query execution: %w", err)
 	}
-	defer rows.Close()
+
 	return nil
 }
 
@@ -122,11 +122,10 @@ func (pr PullRequestRepository) Merge(
 		where id = $1
 	`
 
-	rows, err := pr.conn.Query(ctx, query, pullRequest.PullRequestId)
+	_, err := pr.conn.Exec(ctx, query, pullRequest.PullRequestId)
 	if err != nil {
 		return api.PullRequest{}, fmt.Errorf("On query execution: %w", err)
 	}
-	defer rows.Close()
 
 	return pr.Get(ctx, pullRequest.PullRequestId)
 }

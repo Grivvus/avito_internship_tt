@@ -21,12 +21,10 @@ func NewTeamRepository(conn *pgx.Conn) TeamRepository {
 
 func (tr TeamRepository) Create(ctx context.Context, teamName string) error {
 	const query = `insert into public."teams" (name) values ($1)`
-	rows, err := tr.conn.Query(ctx, query, teamName)
+	_, err := tr.conn.Exec(ctx, query, teamName)
 	if err != nil {
 		return err
 	}
-
-	defer rows.Close()
 
 	return nil
 }
