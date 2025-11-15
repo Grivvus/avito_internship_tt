@@ -1,5 +1,7 @@
 package handlers
 
+import "github.com/Grivvus/reviewers/internal/api"
+
 type RootHandler struct {
 	*UserHandler
 	*TeamHandler
@@ -15,5 +17,17 @@ func NewRootHandler(
 		UserHandler:        uh,
 		TeamHandler:        th,
 		PullRequestHandler: prh,
+	}
+}
+
+func newErrorResponse(code api.ErrorResponseErrorCode, message string) api.ErrorResponse {
+	return api.ErrorResponse{
+		Error: struct {
+			Code    api.ErrorResponseErrorCode `json:"code"`
+			Message string                     `json:"message"`
+		}{
+			Code:    code,
+			Message: message,
+		},
 	}
 }
