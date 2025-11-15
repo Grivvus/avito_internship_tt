@@ -117,8 +117,8 @@ func (pr PullRequestRepository) Merge(
 	pullRequest api.PullRequest,
 ) (api.PullRequest, error) {
 	const query = `update public."pull_requests" 
-		(status, merged_at)
-		values ('MERGED', now())
+		set status = 'MERGED',
+			merged_at = now()
 		where id = $1
 	`
 

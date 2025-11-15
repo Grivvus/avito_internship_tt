@@ -34,24 +34,23 @@ func (h *PullRequestHandler) PostPullRequestCreate(c *gin.Context) {
 	response, err := h.service.Create(c.Request.Context(), prCreate)
 	if err != nil {
 		log.Println(err)
-		if err == service.ResourceNotFoundError {
+		switch err {
+		case service.ResourceNotFoundError:
 			c.JSON(
 				http.StatusNotFound,
 				newErrorResponse(api.NOTFOUND, err.Error()),
 			)
-			return
-		} else if err == service.PRAlreadyExistError {
+		case service.PRAlreadyExistError:
 			c.JSON(
 				http.StatusConflict,
 				newErrorResponse(api.PREXISTS, "PR "+prCreate.AuthorId+" "+err.Error()),
 			)
-			return
+		default:
+			c.JSON(
+				http.StatusConflict,
+				"Unkown server error",
+			)
 		}
-
-		c.JSON(
-			http.StatusInternalServerError,
-			"Unkown server error",
-		)
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Grivvus/reviewers/internal/api"
 	"github.com/Grivvus/reviewers/internal/repository"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var PRAlreadyExistError = errors.New("already exist")
@@ -41,7 +42,17 @@ func (pr PullReqeustService) Create(
 	})
 
 	if err != nil {
-		return response, ResourceNotFoundError
+		var errToReturn error = fmt.Errorf("Unkown server error: %w", err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case "23503":
+				errToReturn = ResourceNotFoundError
+			case "23505":
+				errToReturn = PRAlreadyExistError
+			}
+		}
+		return response, errToReturn
 	}
 
 	potentialReviewers, err := pr.userRepo.FindOtherMembers(ctx, prCreate.AuthorId)
