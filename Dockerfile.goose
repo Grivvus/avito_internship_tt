@@ -7,4 +7,4 @@ RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 COPY .env ./.env
 COPY migrations/ ./migrations/
 
-SHELL ["goose -env=.env -dir=/app/migrations/ up"]
+ENTRYPOINT ["goose", "-env=.env", "-dir=/app/migrations/", "up"]

@@ -30,13 +30,3 @@ services:
     ports:
       - 5432:5432
     restart: no
-    volumes:
-      - postgres_volume:/var/lib/postgresql/data/
-
-volumes:
-  postgres_volume:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/grivvus/docker_volumes/postgres/avito_internship
-      o: bind
