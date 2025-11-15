@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/Grivvus/reviewers/internal/api"
@@ -45,7 +46,7 @@ func (pr PullReqeustService) Create(
 
 	potentialReviewers, err := pr.userRepo.FindOtherMembers(ctx, prCreate.AuthorId)
 	if err != nil {
-		panic("not implemented")
+		return response, fmt.Errorf("On FindOtherMembers: %w", err)
 	}
 
 	filteredReviewers := pr.filterReviewers(ctx, potentialReviewers, []string{prCreate.AuthorId})
@@ -55,7 +56,7 @@ func (pr PullReqeustService) Create(
 
 	err = pr.prRepo.AssignReviewers(ctx, prCreate.PullRequestId, filteredReviewers)
 	if err != nil {
-		panic("not implemented")
+		return response, fmt.Errorf("On AssignReviewers: %w", err)
 	}
 
 	for _, reviewer := range filteredReviewers {
@@ -102,7 +103,7 @@ func (pr PullReqeustService) Reassign(
 
 	potentialReviewers, err := pr.userRepo.FindOtherMembers(ctx, prToChange.AuthorId)
 	if err != nil {
-		panic("not implemented")
+		return prToChange, fmt.Errorf("On FindOtherMembers: %w", err)
 	}
 
 	filter := append([]string{}, prToChange.AssignedReviewers...)
