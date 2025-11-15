@@ -7,12 +7,14 @@ RUN go mod download
 
 COPY . .
 
-RUN make build
+RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server/
 
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/server /server
+COPY --from=builder /app/server /usr/bin/server
+COPY --from=builder /app/api/openapi.yml /api/openapi.yml
+RUN chmod +x /usr/bin/server
 
-ENTRYPOINT ["/server"]
+ENTRYPOINT ["/usr/bin/server"]

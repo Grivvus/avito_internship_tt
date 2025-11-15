@@ -3,7 +3,7 @@ EXECUTABLE_NAME ?= server
 generate:
 	@echo "Generate everything"
 
-build: migration_up generate
+build: generate
 	@echo "Building server"
 	@mkdir -p .bin
 	@go build -o ./${EXECUTABLE_NAME} ./cmd/server
