@@ -8,7 +8,6 @@ CREATE TABLE pull_requests (
     title VARCHAR(500) NOT NULL,
     author_id VARCHAR(255) NOT NULL,
     status pr_status NOT NULL DEFAULT 'OPEN',
-    need_more_reviewers BOOLEAN NOT NULL DEFAULT FALSE,
     merged_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE,
     
