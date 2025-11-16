@@ -2,13 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Grivvus/reviewers/internal/api"
 	"github.com/Grivvus/reviewers/internal/repository"
 )
-
-var TeamAlreadyExistError error = errors.New("already exists")
 
 type TeamService struct {
 	teamRepo *repository.TeamRepository

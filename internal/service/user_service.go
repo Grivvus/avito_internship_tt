@@ -2,14 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Grivvus/reviewers/internal/api"
 	"github.com/Grivvus/reviewers/internal/models"
 	"github.com/Grivvus/reviewers/internal/repository"
 )
-
-var ResourceNotFoundError error = errors.New("resource not found")
 
 type UserService struct {
 	userRepo *repository.UserRepository

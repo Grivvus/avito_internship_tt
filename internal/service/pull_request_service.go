@@ -13,11 +13,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-var PRAlreadyExistError = errors.New("already exist")
-var CantReassignOnMergedPRError = errors.New("cannot reassign on merged PR")
-var ReviewerNotAssignedError = errors.New("reviewer is not assigned to this PR")
-var NoCandidatesError = errors.New("no active replacement candidate in team")
-
 type PullRequestService struct {
 	prRepo   *repository.PullRequestRepository
 	userRepo *repository.UserRepository
