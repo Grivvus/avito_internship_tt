@@ -5,20 +5,20 @@ import (
 	"fmt"
 
 	"github.com/Grivvus/reviewers/internal/api"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PullRequestRepository struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
-func NewPullRequestRepository(conn *pgx.Conn) PullRequestRepository {
-	return PullRequestRepository{
-		conn: conn,
+func NewPullRequestRepository(pool *pgxpool.Pool) *PullRequestRepository {
+	return &PullRequestRepository{
+		pool: pool,
 	}
 }
 
-func (pr PullRequestRepository) FindByReviewer(
+func (pr *PullRequestRepository) FindByReviewer(
 	ctx context.Context,
 	reviewerId string,
 ) ([]api.PullRequest, error) {
@@ -29,7 +29,7 @@ func (pr PullRequestRepository) FindByReviewer(
 		where reviewer_id = $1
 	`
 
-	rows, err := pr.conn.Query(ctx, query, reviewerId)
+	rows, err := pr.pool.Query(ctx, query, reviewerId)
 	if err != nil {
 		return nil, fmt.Errorf("On query execution: %w", err)
 	}
@@ -52,7 +52,7 @@ func (pr PullRequestRepository) FindByReviewer(
 	return pullRequests, nil
 }
 
-func (pr PullRequestRepository) Create(
+func (pr *PullRequestRepository) Create(
 	ctx context.Context,
 	model api.PullRequestShort,
 ) error {
@@ -60,7 +60,7 @@ func (pr PullRequestRepository) Create(
 		(id, title, author_id)
 		values ($1, $2, $3)
 	`
-	_, err := pr.conn.Exec(ctx, query, model.PullRequestId, model.PullRequestName, model.AuthorId)
+	_, err := pr.pool.Exec(ctx, query, model.PullRequestId, model.PullRequestName, model.AuthorId)
 	if err != nil {
 		return fmt.Errorf("On query execution: %w", err)
 	}
@@ -68,7 +68,7 @@ func (pr PullRequestRepository) Create(
 	return nil
 }
 
-func (pr PullRequestRepository) Get(
+func (pr *PullRequestRepository) Get(
 	ctx context.Context,
 	prId string,
 ) (api.PullRequest, error) {
@@ -86,7 +86,7 @@ func (pr PullRequestRepository) Get(
 			where pr_id = $1
 	`
 
-	err := pr.conn.QueryRow(ctx, selectPRInfoQuery, prId).Scan(
+	err := pr.pool.QueryRow(ctx, selectPRInfoQuery, prId).Scan(
 		&responseModel.PullRequestId, &responseModel.PullRequestName,
 		&responseModel.AuthorId, &responseModel.Status,
 		&responseModel.MergedAt, &responseModel.CreatedAt,
@@ -95,7 +95,7 @@ func (pr PullRequestRepository) Get(
 		return responseModel, fmt.Errorf("Can't scan result: %w", err)
 	}
 
-	prReviewersRows, err := pr.conn.Query(ctx, selectPRReviewersQuery, prId)
+	prReviewersRows, err := pr.pool.Query(ctx, selectPRReviewersQuery, prId)
 	if err != nil {
 		return responseModel, fmt.Errorf("On query execution: %w", err)
 	}
@@ -112,7 +112,7 @@ func (pr PullRequestRepository) Get(
 	return responseModel, nil
 }
 
-func (pr PullRequestRepository) Merge(
+func (pr *PullRequestRepository) Merge(
 	ctx context.Context,
 	pullRequest api.PullRequest,
 ) (api.PullRequest, error) {
@@ -122,7 +122,7 @@ func (pr PullRequestRepository) Merge(
 		where id = $1
 	`
 
-	_, err := pr.conn.Exec(ctx, query, pullRequest.PullRequestId)
+	_, err := pr.pool.Exec(ctx, query, pullRequest.PullRequestId)
 	if err != nil {
 		return api.PullRequest{}, fmt.Errorf("On query execution: %w", err)
 	}
@@ -130,7 +130,7 @@ func (pr PullRequestRepository) Merge(
 	return pr.Get(ctx, pullRequest.PullRequestId)
 }
 
-func (pr PullRequestRepository) AssignReviewers(
+func (pr *PullRequestRepository) AssignReviewers(
 	ctx context.Context,
 	pullRequestId string,
 	reviewersId []string,
@@ -140,7 +140,7 @@ func (pr PullRequestRepository) AssignReviewers(
 		values ($1, $2)
 	`
 
-	tx, err := pr.conn.Begin(ctx)
+	tx, err := pr.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("On begin transaction: %w", err)
 	}
@@ -160,7 +160,7 @@ func (pr PullRequestRepository) AssignReviewers(
 	return nil
 }
 
-func (pr PullRequestRepository) ReassignReviewer(
+func (pr *PullRequestRepository) ReassignReviewer(
 	ctx context.Context,
 	pullRequestId, oldReviewerId, newReviewerId string,
 ) error {
@@ -169,7 +169,7 @@ func (pr PullRequestRepository) ReassignReviewer(
 	const insertQuery = `insert into public."pull_request_reviewers"
 		(pr_id, reviewer_id) values ($1, $2)`
 
-	tx, err := pr.conn.Begin(ctx)
+	tx, err := pr.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("On transaction begin: %w", err)
 	}

@@ -12,21 +12,21 @@ import (
 var ResourceNotFoundError error = errors.New("resource not found")
 
 type UserService struct {
-	userRepo repository.UserRepository
-	prRepo   repository.PullRequestRepository
+	userRepo *repository.UserRepository
+	prRepo   *repository.PullRequestRepository
 }
 
 func NewUserservice(
-	userRepo repository.UserRepository,
-	prRepo repository.PullRequestRepository,
-) UserService {
-	return UserService{
+	userRepo *repository.UserRepository,
+	prRepo *repository.PullRequestRepository,
+) *UserService {
+	return &UserService{
 		userRepo: userRepo,
 		prRepo:   prRepo,
 	}
 }
 
-func (us UserService) SetIsActive(
+func (us *UserService) SetIsActive(
 	ctx context.Context,
 	model api.PostUsersSetIsActiveJSONBody,
 ) (api.User, error) {
@@ -42,7 +42,7 @@ func (us UserService) SetIsActive(
 	return user, err
 }
 
-func (us UserService) UserReviews(
+func (us *UserService) UserReviews(
 	ctx context.Context,
 	model api.GetUsersGetReviewParams,
 ) (models.UserReviewsResponse, error) {

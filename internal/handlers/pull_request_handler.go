@@ -10,10 +10,10 @@ import (
 )
 
 type PullRequestHandler struct {
-	service service.PullReqeustService
+	service *service.PullRequestService
 }
 
-func NewPullRequestHandler(prService service.PullReqeustService) *PullRequestHandler {
+func NewPullRequestHandler(prService *service.PullRequestService) *PullRequestHandler {
 	return &PullRequestHandler{
 		service: prService,
 	}

@@ -5,26 +5,26 @@ import (
 	"errors"
 
 	"github.com/Grivvus/reviewers/internal/api"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var UserNotFoundErr error = errors.New("No user was found with this userId")
 
 type UserRepository struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
-func NewUserRepository(conn *pgx.Conn) UserRepository {
-	return UserRepository{
-		conn: conn,
+func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
+	return &UserRepository{
+		pool: pool,
 	}
 }
 
-func (ur UserRepository) Create(ctx context.Context, user api.User) error {
+func (ur *UserRepository) Create(ctx context.Context, user api.User) error {
 	const query = `insert into public."users" (id, username, is_active, team)
 	               values ($1, $2, $3, $4)`
 
-	_, err := ur.conn.Exec(
+	_, err := ur.pool.Exec(
 		ctx, query, user.UserId,
 		user.Username, user.IsActive, user.TeamName,
 	)
@@ -35,12 +35,12 @@ func (ur UserRepository) Create(ctx context.Context, user api.User) error {
 	return nil
 }
 
-func (ur UserRepository) Get(ctx context.Context, userId string) (api.User, error) {
+func (ur *UserRepository) Get(ctx context.Context, userId string) (api.User, error) {
 	var userFromDB api.User
 
 	const query = `select id, username, is_active, team from public."users" where id = $1`
 
-	err := ur.conn.QueryRow(ctx, query, userId).Scan(
+	err := ur.pool.QueryRow(ctx, query, userId).Scan(
 		&userFromDB.UserId, &userFromDB.Username,
 		&userFromDB.IsActive, &userFromDB.TeamName,
 	)
@@ -52,7 +52,7 @@ func (ur UserRepository) Get(ctx context.Context, userId string) (api.User, erro
 	return userFromDB, nil
 }
 
-func (ur UserRepository) Update(ctx context.Context, updatedUser api.User) error {
+func (ur *UserRepository) Update(ctx context.Context, updatedUser api.User) error {
 	const query = `
 		update public."users" set
 			username = $1,
@@ -61,7 +61,7 @@ func (ur UserRepository) Update(ctx context.Context, updatedUser api.User) error
 		where id = $4
 	`
 
-	_, err := ur.conn.Exec(
+	_, err := ur.pool.Exec(
 		ctx, query,
 		updatedUser.Username, updatedUser.IsActive,
 		updatedUser.TeamName, updatedUser.UserId,
@@ -73,10 +73,10 @@ func (ur UserRepository) Update(ctx context.Context, updatedUser api.User) error
 	return nil
 }
 
-func (ur UserRepository) FindByTeam(ctx context.Context, teamName string) ([]api.User, error) {
+func (ur *UserRepository) FindByTeam(ctx context.Context, teamName string) ([]api.User, error) {
 	const query = `select id, username, is_active, team from public."users" where team = $1`
 
-	rows, err := ur.conn.Query(ctx, query, teamName)
+	rows, err := ur.pool.Query(ctx, query, teamName)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (ur UserRepository) FindByTeam(ctx context.Context, teamName string) ([]api
 	return selectedUsers, nil
 }
 
-func (ur UserRepository) FindOtherMembers(
+func (ur *UserRepository) FindOtherMembers(
 	ctx context.Context,
 	memberId string,
 ) ([]api.User, error) {
@@ -106,7 +106,7 @@ func (ur UserRepository) FindOtherMembers(
 	and id <> $1
 	`
 
-	rows, err := ur.conn.Query(ctx, query, memberId)
+	rows, err := ur.pool.Query(ctx, query, memberId)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (ur UserRepository) FindOtherMembers(
 	return otherMembers, nil
 }
 
-func (ur UserRepository) CreateOrUpdate(ctx context.Context, user api.User) error {
+func (ur *UserRepository) CreateOrUpdate(ctx context.Context, user api.User) error {
 	_, err := ur.Get(ctx, user.UserId)
 	if err != nil {
 		// better to match err here

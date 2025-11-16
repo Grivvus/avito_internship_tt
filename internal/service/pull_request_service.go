@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"slices"
+	"time"
 
 	"github.com/Grivvus/reviewers/internal/api"
 	"github.com/Grivvus/reviewers/internal/repository"
@@ -16,27 +18,35 @@ var CantReassignOnMergedPRError = errors.New("cannot reassign on merged PR")
 var ReviewerNotAssignedError = errors.New("reviewer is not assigned to this PR")
 var NoCandidatesError = errors.New("no active replacement candidate in team")
 
-type PullReqeustService struct {
-	prRepo   repository.PullRequestRepository
-	userRepo repository.UserRepository
+type PullRequestService struct {
+	prRepo   *repository.PullRequestRepository
+	userRepo *repository.UserRepository
 }
 
 func NewPullRequestService(
-	prRepo repository.PullRequestRepository,
-	userRepo repository.UserRepository,
-) PullReqeustService {
-	return PullReqeustService{
-		prRepo: prRepo,
+	prRepo *repository.PullRequestRepository,
+	userRepo *repository.UserRepository,
+) *PullRequestService {
+	return &PullRequestService{
+		prRepo:   prRepo,
+		userRepo: userRepo,
 	}
 }
 
-func (pr PullReqeustService) Create(
+func (pr *PullRequestService) Create(
 	ctx context.Context, prCreate api.PostPullRequestCreateJSONBody,
 ) (api.PullRequest, error) {
-	var response api.PullRequest
+	var now time.Time
+	response := api.PullRequest{
+		AuthorId:        prCreate.AuthorId,
+		PullRequestId:   prCreate.PullRequestId,
+		PullRequestName: prCreate.PullRequestName,
+		Status:          api.PullRequestStatusOPEN,
+		CreatedAt:       &now,
+	}
 	err := pr.prRepo.Create(ctx, api.PullRequestShort{
 		AuthorId:        prCreate.AuthorId,
-		PullRequestId:   prCreate.AuthorId,
+		PullRequestId:   prCreate.PullRequestId,
 		PullRequestName: prCreate.PullRequestName,
 		Status:          api.PullRequestShortStatusOPEN,
 	})
@@ -73,11 +83,14 @@ func (pr PullReqeustService) Create(
 	for _, reviewer := range filteredReviewers {
 		response.AssignedReviewers = append(response.AssignedReviewers, reviewer)
 	}
+
+	now = time.Now()
+
 	return response, nil
 
 }
 
-func (pr PullReqeustService) Merge(
+func (pr *PullRequestService) Merge(
 	ctx context.Context,
 	prToMerge api.PostPullRequestMergeJSONBody,
 ) (api.PullRequest, error) {
@@ -95,10 +108,11 @@ func (pr PullReqeustService) Merge(
 	return pr.prRepo.Merge(ctx, prToChange)
 }
 
-func (pr PullReqeustService) Reassign(
+func (pr *PullRequestService) Reassign(
 	ctx context.Context,
 	prToReassign api.PostPullRequestReassignJSONBody,
 ) (api.PullRequest, error) {
+	log.Println(prToReassign)
 	prToChange, err := pr.prRepo.Get(ctx, prToReassign.PullRequestId)
 	if err != nil {
 		return prToChange, ResourceNotFoundError
@@ -108,6 +122,8 @@ func (pr PullReqeustService) Reassign(
 		return prToChange, CantReassignOnMergedPRError
 	}
 
+	log.Println(prToChange.AssignedReviewers)
+	log.Println(prToReassign.OldUserId)
 	if !slices.Contains(prToChange.AssignedReviewers, prToReassign.OldUserId) {
 		return prToChange, ReviewerNotAssignedError
 	}
@@ -140,7 +156,7 @@ func (pr PullReqeustService) Reassign(
 	return prToChange, nil
 }
 
-func (pr PullReqeustService) filterReviewers(
+func (pr *PullRequestService) filterReviewers(
 	ctx context.Context,
 	potentialReviewers []api.User,
 	inappropriateIds []string,

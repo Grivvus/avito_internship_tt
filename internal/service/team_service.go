@@ -11,21 +11,21 @@ import (
 var TeamAlreadyExistError error = errors.New("already exists")
 
 type TeamService struct {
-	teamRepo repository.TeamRepository
-	userRepo repository.UserRepository
+	teamRepo *repository.TeamRepository
+	userRepo *repository.UserRepository
 }
 
 func NewTeamService(
-	teamRepo repository.TeamRepository,
-	userRepo repository.UserRepository,
-) TeamService {
-	return TeamService{
+	teamRepo *repository.TeamRepository,
+	userRepo *repository.UserRepository,
+) *TeamService {
+	return &TeamService{
 		teamRepo: teamRepo,
 		userRepo: userRepo,
 	}
 }
 
-func (ts TeamService) AddTeam(ctx context.Context, team api.Team) error {
+func (ts *TeamService) AddTeam(ctx context.Context, team api.Team) error {
 	err := ts.teamRepo.Create(ctx, team.TeamName)
 	if err != nil {
 		// better to add additional error-matching
@@ -46,7 +46,7 @@ func (ts TeamService) AddTeam(ctx context.Context, team api.Team) error {
 	return nil
 }
 
-func (ts TeamService) GetTeam(
+func (ts *TeamService) GetTeam(
 	ctx context.Context,
 	params api.GetTeamGetParams,
 ) (api.Team, error) {
