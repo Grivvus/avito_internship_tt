@@ -9,7 +9,7 @@ import (
 	"github.com/Grivvus/reviewers/internal/repository"
 	"github.com/Grivvus/reviewers/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -18,10 +18,11 @@ func main() {
 	r := gin.Default()
 
 	const connString = "postgres://postgres:hackme@db:5432/postgres"
-	conn, err := pgx.Connect(context.Background(), connString)
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer pool.Close()
 
 	// swagger-realted
 	r.StaticFile("/openapi.yml", "/api/openapi.yml")
@@ -29,9 +30,9 @@ func main() {
 		ginSwagger.URL("/openapi.yml")))
 	// swagger-related end
 
-	userRepository := repository.NewUserRepository(conn)
-	teamRepository := repository.NewTeamRepository(conn)
-	pullRequestRepository := repository.NewPullRequestRepository(conn)
+	userRepository := repository.NewUserRepository(pool)
+	teamRepository := repository.NewTeamRepository(pool)
+	pullRequestRepository := repository.NewPullRequestRepository(pool)
 
 	userService := service.NewUserservice(userRepository, pullRequestRepository)
 	teamService := service.NewTeamService(teamRepository, userRepository)
